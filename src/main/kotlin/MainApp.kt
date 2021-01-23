@@ -1,19 +1,29 @@
-import androidx.compose.desktop.Window
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material.Button
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Text
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.IntSize
-import androidx.compose.ui.unit.dp
+import math.calculateRSAnalyze
+import utils.readCsv
+import java.time.LocalDate
+
+const val FILE_NAME = "G:\\IdeaProjects\\KotlinFractalTimeSeriesAnalyzer\\src\\main\\resources\\DataSet.csv"
 
 fun main(args: Array<String>)  {
-    println("Hello World!")
+    val data = readCsv(FILE_NAME)
+
+    val testData = mutableMapOf<LocalDate, Double>(
+        Pair(LocalDate.of(2021, 1, 1), 20.0),
+        Pair(LocalDate.of(2021, 1, 2), 30.0),
+        Pair(LocalDate.of(2021, 1, 3), 35.0),
+        Pair(LocalDate.of(2021, 1, 4), 40.0),
+        Pair(LocalDate.of(2021, 1, 5), 45.0),
+        Pair(LocalDate.of(2021, 1, 6), 50.0),
+        Pair(LocalDate.of(2021, 1, 7), 55.0),
+        Pair(LocalDate.of(2021, 1, 8), 60.0),
+        Pair(LocalDate.of(2021, 1, 9), 65.0),
+        Pair(LocalDate.of(2021, 1, 10), 70.0),
+        Pair(LocalDate.of(2021, 1, 11), 75.0),
+    )
+
+    calculateRSAnalyze(data)
+        .entries.stream()
+        .forEach(System.out::println)
 }
 
 //fun main() = Window(title = "First App", size = IntSize(400, 400)) {
