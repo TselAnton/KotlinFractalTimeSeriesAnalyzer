@@ -17,15 +17,15 @@ class MyLogger private constructor(private val loggerName: String) {
         fun getInstance(loggerName: String) = MyLogger(loggerName)
     }
 
-    fun info(message: Any?) {
+    fun debug(message: Any?) {
         if (level.number == 1) {
-            printMessage(message, Level.INFO)
+            printMessage(message, Level.DEBUG)
         }
     }
 
-    fun debug(message: Any?) {
+    fun info(message: Any?) {
         if (level.number <= 2) {
-            printMessage(message, Level.DEBUG)
+            printMessage(message, Level.INFO)
         }
     }
 
@@ -58,8 +58,8 @@ private fun getLoggerLevel(): Level {
 }
 
 private enum class Level(val level: String, val number: Int) {
-    INFO("info", 1),
-    DEBUG("debug", 2),
+    DEBUG("debug", 1),
+    INFO("info", 2),
     WARN("warn", 3),
     ERROR("error", 4),
     OFF("off", 5)

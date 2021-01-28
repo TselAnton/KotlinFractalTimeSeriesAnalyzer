@@ -1,16 +1,14 @@
+import math.getMNKArguments
 import math.getRSIndex
 import utils.readCsv
-import java.lang.String.format
-import java.time.LocalDate
+import java.io.File
 
-const val FILE_NAME = "G:\\IdeaProjects\\KotlinFractalTimeSeriesAnalyzer\\src\\main\\resources\\DataSet.csv"
+private val FILE_NAME = File("").absolutePath + "\\src\\main\\resources\\DataSet.csv"
 
 fun main()  {
     val data = readCsv(FILE_NAME)
-    getRSIndex(data)
-        .entries.stream()
-            .map { entry -> format("%s %s", entry.key, entry.value.toString().replace(".", ","))  }
-        .forEach(System.out::println)
+    val rsIndex = getRSIndex(data)
+    getMNKArguments(rsIndex)
 }
 
 //fun main() = Window(title = "First App", size = IntSize(400, 400)) {

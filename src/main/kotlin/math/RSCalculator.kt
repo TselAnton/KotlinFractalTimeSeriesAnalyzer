@@ -4,25 +4,25 @@ import utils.MyLogger
 import java.time.LocalDate
 import kotlin.math.ln
 import kotlin.math.pow
-import kotlin.math.sqrt
 
 /**
  * Файл функций для рассчёта показателя Херста методом R/S анализа
  */
 
-val logger: MyLogger = MyLogger.getInstance("RSCalculator")
+private val logger: MyLogger = MyLogger.getInstance("RSCalculator")
 
 
 /**
  * Функция подсчёта RS анализа
  */
-fun getRSIndex(map: Map<LocalDate, Double>): Map<Int, Double> {
+fun getRSIndex(map: Map<LocalDate, Double>): List<Pair<Double, Double>> {
     val logarithmicValues = convertToLogarithmicSeries(map) // Получение логарифмических значений
-    var divisor = findSmallestDivisor(logarithmicValues.size, null) // Находим первый делитель
+    var divisor = findSmallestDivisor(logarithmicValues.size, 0) // Находим первый делитель
 
+    logger.debug("Size of coming data array is ${map.size}")
     logger.debug("Size of logarithmic values is ${logarithmicValues.size}")
 
-    val resultMap = mutableMapOf<Int, Double>()
+    val resultMap = mutableListOf<Pair<Double, Double>>()
 
     while (divisor <= logarithmicValues.size) {
         val subLists = splitIntoSubArrays(logarithmicValues, divisor)   // Разделяем лист на подлисты длинны divisor
@@ -31,7 +31,7 @@ fun getRSIndex(map: Map<LocalDate, Double>): Map<Int, Double> {
         val r = calculateR(accumulatedDeviations)   // Считаем нормированный размах по каждой группе
         val s = calculateS(subLists, averageValues) // Считаем стандартное отклонение
 
-        resultMap[divisor] = calculateRS(r, s)  // Считаем R/S показатель
+        resultMap.add(Pair(divisor.toDouble(), calculateRS(r, s))) // Считаем R/S показатель
 
         divisor = findSmallestDivisor(logarithmicValues.size, divisor)  // Находим следующий наименьший делитель
     }
@@ -56,8 +56,8 @@ private fun convertToLogarithmicSeries(mapValues: Map<LocalDate, Double>): List<
 /**
  * Поиск наименьшего делителя
  */
-private fun findSmallestDivisor(value: Int, previousDivisor: Int?): Int {
-    val firstDiv = if (previousDivisor == null) 10 else previousDivisor + 1
+private fun findSmallestDivisor(value: Int, previousDivisor: Int): Int {
+    val firstDiv = if (previousDivisor == 0) 10 else previousDivisor + 1
 
     for (div in firstDiv until (value / 2) + 1) {
         if (value % div == 0) {

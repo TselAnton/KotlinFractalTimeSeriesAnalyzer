@@ -4,9 +4,17 @@ import java.io.File
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
+private val logger: MyLogger = MyLogger.getInstance("CsvReader")
+
 fun readCsv(fileName: String): Map<LocalDate, Double> {
     val resultSet = mutableMapOf<LocalDate, Double>()
-    File(fileName).forEachLine { resultSet[getDate(it)] = getPrice(it) }
+
+    try {
+        File(fileName).forEachLine { resultSet[getDate(it)] = getPrice(it) }
+    } catch (e: Exception) {
+        logger.error(e)
+    }
+
     return resultSet
 }
 
