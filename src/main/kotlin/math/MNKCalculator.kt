@@ -17,7 +17,3 @@ fun getMNKArguments(points: List<Pair<Double, Double>>): Pair<Double, Double> {
 
     return Pair(a, b)
 }
-
-fun getMNKArgumentsForShuffledPoints(points: List<Pair<Double, Double>>): Pair<Double, Double> {
-    return getMNKArguments(points.shuffled())
-}
