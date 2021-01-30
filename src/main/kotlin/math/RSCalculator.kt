@@ -1,5 +1,6 @@
 package math
 
+import data.RSIndex
 import utils.MyLogger
 import java.time.LocalDate
 import kotlin.math.ln
@@ -15,14 +16,14 @@ private val logger: MyLogger = MyLogger.getInstance("RSCalculator")
 /**
  * Функция подсчёта RS анализа
  */
-fun getRSIndex(map: Map<LocalDate, Double>): List<Pair<Double, Double>> {
+fun getRSIndex(map: Map<LocalDate, Double>): RSIndex {
     val logarithmicValues = convertToLogarithmicSeries(map) // Получение логарифмических значений
     var divisor = findSmallestDivisor(logarithmicValues.size, 0) // Находим первый делитель
 
     logger.debug("Size of coming data array is ${map.size}")
     logger.debug("Size of logarithmic values is ${logarithmicValues.size}")
 
-    val resultMap = mutableListOf<Pair<Double, Double>>()
+    val rsIndexPoints = mutableListOf<Pair<Double, Double>>()
 
     while (divisor <= logarithmicValues.size) {
         val subLists = splitIntoSubArrays(logarithmicValues, divisor)   // Разделяем лист на подлисты длинны divisor
@@ -31,12 +32,15 @@ fun getRSIndex(map: Map<LocalDate, Double>): List<Pair<Double, Double>> {
         val r = calculateR(accumulatedDeviations)   // Считаем нормированный размах по каждой группе
         val s = calculateS(subLists, averageValues) // Считаем стандартное отклонение
 
-        resultMap.add(Pair(divisor.toDouble(), calculateRS(r, s))) // Считаем R/S показатель
+        rsIndexPoints.add(Pair(divisor.toDouble(), calculateRS(r, s))) // Считаем R/S показатель
 
         divisor = findSmallestDivisor(logarithmicValues.size, divisor)  // Находим следующий наименьший делитель
     }
 
-    return resultMap
+    val logPoints = rsIndexPoints.map { pair -> Pair(ln(pair.first), ln(pair.second)) }
+    val args = getMNKArguments(logPoints)
+
+    return RSIndex(args.first, args.second, logPoints)
 }
 
 /**
