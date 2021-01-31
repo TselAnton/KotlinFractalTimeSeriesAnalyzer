@@ -1,6 +1,7 @@
 package math
 
 import data.RSIndex
+import typesalias.Point
 import utils.MyLogger
 import java.time.LocalDate
 import kotlin.math.ln
@@ -23,7 +24,7 @@ fun getRSIndex(map: Map<LocalDate, Double>): RSIndex {
     logger.debug("Size of coming data array is ${map.size}")
     logger.debug("Size of logarithmic values is ${logarithmicValues.size}")
 
-    val rsIndexPoints = mutableListOf<Pair<Double, Double>>()
+    val rsIndexPoints = mutableListOf<Point>()
 
     while (divisor <= logarithmicValues.size) {
         val subLists = splitIntoSubArrays(logarithmicValues, divisor)   // Разделяем лист на подлисты длинны divisor
