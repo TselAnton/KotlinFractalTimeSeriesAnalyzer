@@ -1,6 +1,6 @@
 package math
 
-import data.RSIndex
+import data.HerstIndex
 import typesalias.Point
 import utils.MyLogger
 import java.time.LocalDate
@@ -17,7 +17,7 @@ private val logger: MyLogger = MyLogger.getInstance("RSCalculator")
 /**
  * Функция подсчёта RS анализа
  */
-fun getRSIndex(map: Map<LocalDate, Double>): RSIndex {
+fun getRSIndex(map: Map<LocalDate, Double>): HerstIndex {
     val logarithmicValues = convertToLogarithmicSeries(map) // Получение логарифмических значений
     var divisor = findSmallestDivisor(logarithmicValues.size, 0) // Находим первый делитель
 
@@ -41,14 +41,14 @@ fun getRSIndex(map: Map<LocalDate, Double>): RSIndex {
     val logPoints = rsIndexPoints.map { pair -> Pair(ln(pair.first), ln(pair.second)) }
     val args = getMNKArguments(logPoints)
 
-    return RSIndex(args.first, args.second, logPoints)
+    return HerstIndex(args.first, args.second, logPoints)
 }
 
 /**
  * Перевод значений в логарифмический ряд
  */
 private fun convertToLogarithmicSeries(mapValues: Map<LocalDate, Double>): List<Double> {
-    val logarithmicValues: ArrayList<Double> = ArrayList()
+    val logarithmicValues = mutableListOf<Double>()
     val values = ArrayList(mapValues.values)
     val expectedSize = if (values.size % 2 == 0) values.size - 1 else values.size
 

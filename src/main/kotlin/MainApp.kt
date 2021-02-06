@@ -11,20 +11,20 @@
 //import androidx.compose.ui.Modifier
 //import androidx.compose.ui.unit.IntSize
 //import androidx.compose.ui.unit.dp
+import math.getMinkovIndex
 import math.getRSIndex
 import utils.readCsv
+import utils.shuffle
 import java.io.File
-import java.time.LocalDate
 
 private val FILE_NAME = File("").absolutePath + "\\src\\main\\resources\\DataSet.csv"
 
 fun main()  {
     val data = readCsv(FILE_NAME)
     val rsIndex = getRSIndex(data)
-    val shuffledRsIndex = getRSIndex(getShuffledData(data))
+    val shuffledRsIndex = getRSIndex(data.shuffle())
 
-    println(rsIndex)
-    println(shuffledRsIndex)
+    val minkIndex = getMinkovIndex(data)
 
 //    Window(title = "First App", size = IntSize(400, 400)) {
 //        val count = remember { mutableStateOf(0) }
@@ -47,12 +47,4 @@ fun main()  {
 //    }
 }
 
-private fun getShuffledData(data: Map<LocalDate, Double>): Map<LocalDate, Double> {
-    val shuffledKeys: List<LocalDate> = data.keys.shuffled()
-    val result = mutableMapOf<LocalDate, Double>()
-    for (key in shuffledKeys) {
-        result[key] = data.getOrElse(key) { 0.0 }
-    }
 
-    return result
-}

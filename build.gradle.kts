@@ -17,6 +17,7 @@ repositories {
 
 dependencies {
     implementation(compose.desktop.currentOs)
+    implementation("junit:junit:4.12")
     testImplementation(kotlin("test-junit"))
 }
 
