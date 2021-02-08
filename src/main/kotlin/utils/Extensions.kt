@@ -1,6 +1,7 @@
 package utils
 
 import typesalias.Point
+import kotlin.math.roundToInt
 
 fun <K, V> Map<K, V>.shuffle(): Map<K, V> {
     val shuffledKeys = this.keys.shuffled()
@@ -20,26 +21,18 @@ fun <K> Set<K>.get(index: Long): K? {
             .orElse(null)
 }
 
-fun List<Point>.maxX(): Double? {
-    return this.map { it.first }
+fun List<Point>.maxIntX(defaultValue: Int = 0): Int {
+    val result = this.map { it.first }
         .toList()
         .maxOrNull()
+
+    return result?.roundToInt() ?: defaultValue
 }
 
-fun List<Point>.maxY(): Double? {
-    return this.map { it.second }
+fun List<Point>.maxIntY(defaultValue: Int = 0): Int {
+    val result = this.map { it.second }
         .toList()
         .maxOrNull()
-}
 
-fun List<Point>.minX(): Double? {
-    return this.map { it.first }
-        .toList()
-        .minOrNull()
-}
-
-fun List<Point>.minY(): Double? {
-    return this.map { it.second }
-        .toList()
-        .minOrNull()
+    return result?.roundToInt() ?: defaultValue
 }

@@ -10,7 +10,7 @@ fun readCsv(fileName: String): Map<LocalDate, Double> {
     val resultSet = mutableMapOf<LocalDate, Double>()
 
     try {
-        File(fileName).forEachLine { resultSet[getDate(it)] = getPrice(it) }
+        File(fileName).forEachLine { resultSet[getDate(it)] = getValue(it) }
     } catch (e: Exception) {
         logger.error(e)
     }
@@ -18,7 +18,7 @@ fun readCsv(fileName: String): Map<LocalDate, Double> {
     return resultSet
 }
 
-private fun getPrice(line: String): Double {
+private fun getValue(line: String): Double {
     return line.split(";")[1].trim().replace(',', '.').toDouble()
 }
 
