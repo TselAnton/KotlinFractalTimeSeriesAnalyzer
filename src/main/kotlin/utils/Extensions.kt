@@ -1,5 +1,6 @@
 package utils
 
+import typesalias.Bitmap
 import typesalias.Point
 import kotlin.math.roundToInt
 
@@ -35,4 +36,8 @@ fun List<Point>.maxIntY(defaultValue: Int = 0): Int {
         .maxOrNull()
 
     return result?.roundToInt() ?: defaultValue
+}
+
+fun Bitmap.countOfBoxes(): Int {
+    return this.map { array -> array.sum() }.sum()
 }

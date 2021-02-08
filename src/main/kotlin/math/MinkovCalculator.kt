@@ -1,11 +1,15 @@
 package math
 
 import data.HerstIndex
+import typesalias.Bitmap
+
 import typesalias.Point
 import utils.*
 import java.time.LocalDate
+import kotlin.math.ln
 
 private val logger: MyLogger = MyLogger.getInstance("MinkovCalculator")
+private const val FILL: Byte = 1.toByte()
 
 /**
  * Расчёт показателя Хёрста методом Миньковского
@@ -13,19 +17,40 @@ private val logger: MyLogger = MyLogger.getInstance("MinkovCalculator")
 fun getMinkovIndex(map: Map<LocalDate, Double>): HerstIndex {
     val points = normalizePoints(map)   // Нормализуем точки
 
-    val xLength = getXLength(points)    // Берём количество точек по горизонтали кратное двум
-    val yLength = points.maxIntY()
-    val bitmap: Array<Array<Byte>> = buildBitmap(points, xLength, yLength) // Строим битмат единичных отрезков
+    val length = getLength(points)    // Длина стороны сетки всегда будет квадратной
+    val bitmap: Bitmap = buildBitmap(points, length) // Строим битмат единичных отрезков
 
-    val minkPoints = mutableListOf<Point>()
-    var divisor = 1 // Берём первый наименьший делитель. Он будет длинной 1 квадрата
+    val minkPoints = mutableListOf(Point(ln(1.0), ln(bitmap.countOfBoxes().toDouble())))
+    var divisor = findSmallestDivisor(length) // Берём наименьший делитель > 1
 
-    while (divisor <= xLength / 2) {
-
-        divisor = findSmallestDivisor(xLength, divisor) // Поиск следующего делителя
+    while (divisor <= length / 2) {
+        val newBitmap = buildScopeBitmap(bitmap, length, divisor)
+        minkPoints.add(minkPoints.size - 1, Point(ln(1.0 / divisor), ln(newBitmap.countOfBoxes().toDouble())))
+        divisor = findSmallestDivisor(length, divisor) // Поиск следующего делителя
     }
 
-    return HerstIndex(0.0, 0.0, minkPoints)
+    val args = getMNKArguments(minkPoints)
+
+    return HerstIndex(args.first, args.second, minkPoints)
+}
+
+
+
+fun buildScopeBitmap(bitmap: Bitmap, length: Int, divisor: Int): Bitmap {
+    val resultBitmap: Bitmap = Array(length / divisor) { Array(length / divisor) { 0 } }
+    for (x in 0 until length / divisor) {
+        for (y in 0 until length / divisor) {
+            findBoxes@ for (i in 0 until divisor) {
+                for (j in 0 until divisor) {
+                    if (bitmap[i + x * divisor][j + y * divisor] == FILL) {
+                        resultBitmap[x][y] = FILL
+                        break@findBoxes
+                    }
+                }
+            }
+        }
+    }
+    return resultBitmap
 }
 
 /**
@@ -33,45 +58,69 @@ fun getMinkovIndex(map: Map<LocalDate, Double>): HerstIndex {
  * 1 — пиксель содержит в себе график, иначе 0
  * На основе этой карты будут строиться все более крупные карты
  */
- fun buildBitmap(points: List<Point>, xLength: Int, yLength: Int): Array<Array<Byte>> {
-    val bitmap: Array<Array<Byte>> = arrayOf()
+private fun buildBitmap(points: List<Point>, length: Int): Bitmap {
+    val bitmap: Bitmap = Array(length) { Array(length) { 0 } }
 
-    for (x in 0 until xLength) {
-        bitmap.set(x, arrayOf())
+    for (x in 0 until length) {
 
         val xPoint = x + 0.5
-        val p1 = chooseFirstPoint(points, x)
-        val p2 = points[x + 1]
+        val firstIndex = chooseFirstPointIndex(points, x)
+        val secondIndex = chooseSecondPointIndex(firstIndex)
 
-        println("point1 = $p1, point2 = $p2")
-
-        for (y in 0 until yLength) {
-            bitmap[x][y] = 1
+        for (y in 0 until length) {
+            if (firstIndex != -1 && secondIndex != -1) {
+                val funValue = getFunValue(points[firstIndex], points[secondIndex], xPoint)
+                if (funValue >= y && funValue < y + 1) {
+                    bitmap[x][y] = FILL
+                }
+            }
         }
     }
 
     return bitmap
 }
 
-private fun chooseFirstPoint(points: List<Point>, x: Int): Point {
-    return when (x) {
-        points[x].first.toInt() -> points[x]
-        0 -> Point(0.0, 0.0)
-        else -> points[x - 1]
+/**
+ * Выбор индекса первой точки, подходящей под текущую клетку
+ * Если точка лежит в пределах этой точки, то будет выбрана она
+ * Если в данной клетке нет точки, то будет выбрана предыдущая точка
+ * Если предыдущих точек нет, то будет возвращено -1
+ */
+private fun chooseFirstPointIndex(points: List<Point>, x: Int): Int {
+    var resultIndex: Int = -1
+    for (index in points.indices) {
+        if (points[index].first < x + 1) {
+            resultIndex = index
+        } else if (points[index].first > x + 1) {
+            return resultIndex
+        }
     }
+    return resultIndex
 }
 
+/**
+ * Выбор следующей точки для текущей клетки
+ * Если первый индекс равен -1, то и второй равен -1
+ * Иначе берётся следующая точка за выбранной первой
+ */
+private fun chooseSecondPointIndex(p1: Int): Int {
+    return if (p1 == -1) -1 else p1 + 1
+}
+
+/**
+ * Получение значения функции прямой по двум точкам и проверочному значению
+ */
 private fun getFunValue(p1: Point, p2: Point, xPoint: Double): Double {
     return (xPoint - p1.first) * (p2.second - p1.second) / (p2.first - p1.first) + p1.second
 }
 
 /**
- * Получение длины ряда в у.е.
- * Если значение не кратно 2, то добавляется ещё одна клетка в конец
+ * Рассчёт длинны стороны сетки
+ * Сетка всегда будет квадратная, поэтому берётся максимальная сторона прямоугольника кратная двум
  */
-private fun getXLength(points: List<Point>): Int {
-    val maxX = points.maxIntX()
-    return if (maxX % 2 == 0) maxX else maxX + 1
+private fun getLength(points: List<Point>): Int {
+    val max = if (points.maxIntX() >= points.maxIntY()) points.maxIntX() else points.maxIntY()
+    return if (max % 2 == 0) max else max + 1
 }
 
 /**
@@ -93,10 +142,16 @@ private fun normalizePoints(map: Map<LocalDate, Double>): List<Point> {
     return resultPoints
 }
 
+/**
+ * Нормализация значения y так, чтобы все значения находились в первой координатной четверти
+ */
 private fun normalizeY(y: Double, minY: Double): Double {
     return if (minY <= 0) y + minY else y - minY
 }
 
+/**
+ * Рассчёт дней между двумя датами
+ */
 private fun daysBetween(d1: LocalDate, d2: LocalDate): Double {
     return (d2.toEpochDay() - d1.toEpochDay()).toDouble()
 }
@@ -104,7 +159,7 @@ private fun daysBetween(d1: LocalDate, d2: LocalDate): Double {
 /**
  * Поиск наименьшего делителя
  */
-private fun findSmallestDivisor(value: Int, previousDivisor: Int = 0): Int {
+private fun findSmallestDivisor(value: Int, previousDivisor: Int = 1): Int {
     val divisor = previousDivisor + 1
 
     for (div in divisor until (value / 2) + 1) {

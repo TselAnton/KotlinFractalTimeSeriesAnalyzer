@@ -11,49 +11,24 @@
 //import androidx.compose.ui.Modifier
 //import androidx.compose.ui.unit.IntSize
 //import androidx.compose.ui.unit.dp
-import math.buildBitmap
-import math.getMinkovIndex
-import math.getRSIndex
+import math.*
 
 import typesalias.Point
-import utils.maxIntX
-import utils.maxIntY
-import utils.readCsv
-import utils.shuffle
+import utils.*
 import java.io.File
-import kotlin.math.roundToInt
 
 private val FILE_NAME = File("").absolutePath + "\\src\\main\\resources\\DataSet.csv"
 
-private fun getXLength(points: List<Point>): Int {
-    val maxX = points.maxIntX()
-    return if (maxX % 2 == 0) maxX else maxX + 1
-}
-
 fun main()  {
-    val points = mutableListOf<Point>(
-        Point(1.0, 2.8),
-        Point(2.0, 4.56),
-        Point(3.0, 5.0),
-        Point(5.0, 3.9),
-        Point(6.0, 2.8),
-        Point(7.0, 2.0),
-        Point(9.0, 2.3),
-        Point(10.0, 2.8),
-    )
-
-    val xLength = getXLength(points)    // Берём количество точек по горизонтали кратное двум
-    val yLength = points.maxIntY()
-    val bitmap = buildBitmap(points, xLength, yLength)
-    println(bitmap)
 
 
 
-//    val data = readCsv(FILE_NAME)
-//    val rsIndex = getRSIndex(data)
-//    val shuffledRsIndex = getRSIndex(data.shuffle())
-//
-//    val minkIndex = getMinkovIndex(data)
+    val data = readCsv(FILE_NAME)
+    val rsIndex = getRSIndex(data)
+    val minkIndex = getMinkovIndex(data)
+
+    println("RS Index = ${rsIndex.k}")
+    println("MINK Index = ${minkIndex}")
 
 //    Window(title = "First App", size = IntSize(400, 400)) {
 //        val count = remember { mutableStateOf(0) }
