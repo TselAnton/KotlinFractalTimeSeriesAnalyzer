@@ -27,6 +27,7 @@ fun getRSIndex(map: Map<LocalDate, Double>): HerstIndex {
     val rsIndexPoints = mutableListOf<Point>()
 
     while (divisor <= logarithmicValues.size) {
+        logger.debug("Next divisor is $divisor")
         val subLists = splitIntoSubArrays(logarithmicValues, divisor)   // Разделяем лист на подлисты длинны divisor
         val averageValues: List<Double> = subLists.map { list -> list.average() }   // Считаем средние значения для каждой группы
         val accumulatedDeviations = calculateAccumulatedDeviations(subLists, averageValues) // Считаем средние отклонения

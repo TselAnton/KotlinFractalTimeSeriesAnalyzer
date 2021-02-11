@@ -2,6 +2,7 @@ package utils
 
 import typesalias.Bitmap
 import typesalias.Point
+import java.lang.StringBuilder
 import kotlin.math.roundToInt
 
 fun <K, V> Map<K, V>.shuffle(): Map<K, V> {
@@ -40,4 +41,16 @@ fun List<Point>.maxIntY(defaultValue: Int = 0): Int {
 
 fun Bitmap.countOfBoxes(): Int {
     return this.map { array -> array.sum() }.sum()
+}
+
+fun Bitmap.getToString(): String {
+    val toString = StringBuilder()
+    for (x in this.indices) {
+        for (y in this[x].indices) {
+            toString.append(this[x][y])
+            toString.append(" ")
+        }
+        toString.append("\n")
+    }
+    return toString.toString()
 }

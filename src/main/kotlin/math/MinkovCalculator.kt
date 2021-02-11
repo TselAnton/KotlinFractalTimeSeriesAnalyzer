@@ -7,26 +7,30 @@ import typesalias.Point
 import utils.*
 import java.time.LocalDate
 import kotlin.math.ln
+import kotlin.math.roundToInt
 
 private val logger: MyLogger = MyLogger.getInstance("MinkovCalculator")
-private const val FILL: Byte = 1.toByte()
+private const val PAINTED_CELL: Byte = 1.toByte()
 
 /**
  * Расчёт показателя Хёрста методом Миньковского
  */
-fun getMinkovIndex(map: Map<LocalDate, Double>): HerstIndex {
+fun getMinkovIndex(map: Map<LocalDate, Double>, startBlockSize: Int = 1): HerstIndex {
     val points = normalizePoints(map)   // Нормализуем точки
 
-    val length = getLength(points)    // Длина стороны сетки всегда будет квадратной
-    val bitmap: Bitmap = buildBitmap(points, length) // Строим битмат единичных отрезков
+    val xLength = points.maxIntX()
+    val yLength = points.maxIntY()
 
-    val minkPoints = mutableListOf(Point(ln(1.0), ln(bitmap.countOfBoxes().toDouble())))
-    var divisor = findSmallestDivisor(length) // Берём наименьший делитель > 1
+    val minkPoints = mutableListOf<Point>()
+    var blockSize = startBlockSize   // Стартовый размер ячейки
 
-    while (divisor <= length / 2) {
-        val newBitmap = buildScopeBitmap(bitmap, length, divisor)
-        minkPoints.add(minkPoints.size - 1, Point(ln(1.0 / divisor), ln(newBitmap.countOfBoxes().toDouble())))
-        divisor = findSmallestDivisor(length, divisor) // Поиск следующего делителя
+    while (blockSize <= xLength / 2) {
+        logger.debug("Block size = $blockSize")
+        val bitmap = buildBitmap(points, blockSize, xLength, yLength) // Строим сетку определённой длинны
+        logger.debug("Bitmap")
+        logger.debug("${bitmap.getToString()} \n")
+        minkPoints.add(Point(ln(1.0 / blockSize), ln(bitmap.countOfBoxes().toDouble())))
+        blockSize *= 2  // Увеличиваем клетку вдвоеk
     }
 
     val args = getMNKArguments(minkPoints)
@@ -34,46 +38,25 @@ fun getMinkovIndex(map: Map<LocalDate, Double>): HerstIndex {
     return HerstIndex(args.first, args.second, minkPoints)
 }
 
-
-
-fun buildScopeBitmap(bitmap: Bitmap, length: Int, divisor: Int): Bitmap {
-    val resultBitmap: Bitmap = Array(length / divisor) { Array(length / divisor) { 0 } }
-    for (x in 0 until length / divisor) {
-        for (y in 0 until length / divisor) {
-            findBoxes@ for (i in 0 until divisor) {
-                for (j in 0 until divisor) {
-                    if (bitmap[i + x * divisor][j + y * divisor] == FILL) {
-                        resultBitmap[x][y] = FILL
-                        break@findBoxes
-                    }
-                }
-            }
-        }
-    }
-    return resultBitmap
-}
-
 /**
- * Строим карту пикселей, которые содержат в себе график
- * 1 — пиксель содержит в себе график, иначе 0
- * На основе этой карты будут строиться все более крупные карты
+ * Построение битовой карты
  */
-private fun buildBitmap(points: List<Point>, length: Int): Bitmap {
-    val bitmap: Bitmap = Array(length) { Array(length) { 0 } }
+private fun buildBitmap(points: List<Point>, blockSize: Int, xLength: Int, yLength: Int): Bitmap {
+    val bitmapXLength = (xLength.toDouble() / blockSize.toDouble() ).roundToInt()
+    val bitmapYLength = (yLength.toDouble() / blockSize.toDouble() ).roundToInt() + 1
 
-    for (x in 0 until length) {
+    val bitmap: Bitmap = Array(bitmapXLength) { Array(bitmapYLength) { 0 } }
 
-        val xPoint = x + 0.5
-        val firstIndex = chooseFirstPointIndex(points, x)
-        val secondIndex = chooseSecondPointIndex(firstIndex)
+    for (x in 0 until bitmapXLength) {
 
-        for (y in 0 until length) {
-            if (firstIndex != -1 && secondIndex != -1) {
-                val funValue = getFunValue(points[firstIndex], points[secondIndex], xPoint)
-                if (funValue >= y && funValue < y + 1) {
-                    bitmap[x][y] = FILL
-                }
-            }
+        val xMiddlePoint: Double = x * blockSize + (blockSize / 2.0)   // Находим середину отрезка квадрата
+
+        val firstPoint = getFirstPoint(points, xMiddlePoint)    // Находим индекс первой рассматриваемой точки
+        val secondPoint = getSecondPoint(points, firstPoint)  // Находим индекс второй рассматриваемой точки
+
+        if (firstPoint != null && secondPoint != null) {    // Если есть что рассматривать
+            val funValue = getFunValue(firstPoint, secondPoint, xMiddlePoint)   // Считаем значение функции
+            bitmap[x][funValue.toInt() / blockSize] = PAINTED_CELL
         }
     }
 
@@ -82,29 +65,29 @@ private fun buildBitmap(points: List<Point>, length: Int): Bitmap {
 
 /**
  * Выбор индекса первой точки, подходящей под текущую клетку
- * Если точка лежит в пределах этой точки, то будет выбрана она
+ * Если точка лежит в пределах текущей клетке, то будет выбрана она
  * Если в данной клетке нет точки, то будет выбрана предыдущая точка
- * Если предыдущих точек нет, то будет возвращено -1
+ * Если предыдущих точек нет, то будет возвращено null
  */
-private fun chooseFirstPointIndex(points: List<Point>, x: Int): Int {
-    var resultIndex: Int = -1
-    for (index in points.indices) {
-        if (points[index].first < x + 1) {
-            resultIndex = index
-        } else if (points[index].first > x + 1) {
-            return resultIndex
-        }
-    }
-    return resultIndex
+private fun getFirstPoint(points: List<Point>, xMiddle: Double): Point? {
+    return points
+            .filter { p -> p.first < xMiddle }
+            .maxByOrNull { p -> p.first }
 }
 
 /**
- * Выбор следующей точки для текущей клетки
- * Если первый индекс равен -1, то и второй равен -1
- * Иначе берётся следующая точка за выбранной первой
+ * Выбор второй точки
+ * Если первая точка равна null, то и вторая будет null
+ * Если первая точка не последняя, будет возвращена следующая за ней клетка
+ * Если первая точка последняя, то будет возвращено null
  */
-private fun chooseSecondPointIndex(p1: Int): Int {
-    return if (p1 == -1) -1 else p1 + 1
+private fun getSecondPoint(points: List<Point>, firstPoint: Point?): Point? {
+    return if (firstPoint != null) {
+        val indexOfFirstPoint = points.indexOf(firstPoint)
+
+        if (indexOfFirstPoint != points.lastIndex) points[points.indexOf(firstPoint) + 1]
+        else null
+    } else null
 }
 
 /**
@@ -112,15 +95,6 @@ private fun chooseSecondPointIndex(p1: Int): Int {
  */
 private fun getFunValue(p1: Point, p2: Point, xPoint: Double): Double {
     return (xPoint - p1.first) * (p2.second - p1.second) / (p2.first - p1.first) + p1.second
-}
-
-/**
- * Рассчёт длинны стороны сетки
- * Сетка всегда будет квадратная, поэтому берётся максимальная сторона прямоугольника кратная двум
- */
-private fun getLength(points: List<Point>): Int {
-    val max = if (points.maxIntX() >= points.maxIntY()) points.maxIntX() else points.maxIntY()
-    return if (max % 2 == 0) max else max + 1
 }
 
 /**
@@ -154,18 +128,4 @@ private fun normalizeY(y: Double, minY: Double): Double {
  */
 private fun daysBetween(d1: LocalDate, d2: LocalDate): Double {
     return (d2.toEpochDay() - d1.toEpochDay()).toDouble()
-}
-
-/**
- * Поиск наименьшего делителя
- */
-private fun findSmallestDivisor(value: Int, previousDivisor: Int = 1): Int {
-    val divisor = previousDivisor + 1
-
-    for (div in divisor until (value / 2) + 1) {
-        if (value % div == 0) {
-            return div
-        }
-    }
-    return Int.MAX_VALUE
 }

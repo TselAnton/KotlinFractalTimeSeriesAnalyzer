@@ -13,7 +13,6 @@
 //import androidx.compose.ui.unit.dp
 import math.*
 
-import typesalias.Point
 import utils.*
 import java.io.File
 
@@ -21,13 +20,11 @@ private val FILE_NAME = File("").absolutePath + "\\src\\main\\resources\\DataSet
 
 fun main()  {
 
-
-
     val data = readCsv(FILE_NAME)
-    val rsIndex = getRSIndex(data)
+//    val rsIndex = getRSIndex(data)
     val minkIndex = getMinkovIndex(data)
 
-    println("RS Index = ${rsIndex.k}")
+//    println("RS Index = ${rsIndex.k}")
     println("MINK Index = ${minkIndex}")
 
 //    Window(title = "First App", size = IntSize(400, 400)) {
