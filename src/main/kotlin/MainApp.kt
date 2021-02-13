@@ -17,15 +17,18 @@ import utils.*
 import java.io.File
 
 private val FILE_NAME = File("").absolutePath + "\\src\\main\\resources\\DataSet.csv"
+private val OTHER_FILE = "G:\\Downloads\\GAZP_000101_210213.csv"
 
 fun main()  {
 
-    val data = readCsv(FILE_NAME)
-//    val rsIndex = getRSIndex(data)
-    val minkIndex = getMinkovIndex(data)
+    val data = readCsv(OTHER_FILE, 3, 8, ",", "ddMMyy", 1)
+    val rsIndex = getRSIndex(data)
 
-//    println("RS Index = ${rsIndex.k}")
-    println("MINK Index = ${minkIndex}")
+    println("koef k = ${rsIndex.k}, b = ${rsIndex.b}")
+    rsIndex.logPoints
+        .stream()
+        .map { Pair(it.first.toString().replace('.', ','), it.second.toString().replace('.', ',')) }
+        .forEach { println("${it.first}  ${it.second}") }
 
 //    Window(title = "First App", size = IntSize(400, 400)) {
 //        val count = remember { mutableStateOf(0) }

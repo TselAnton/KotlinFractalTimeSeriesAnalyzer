@@ -2,7 +2,6 @@ package math
 
 import data.HerstIndex
 import typesalias.Bitmap
-
 import typesalias.Point
 import utils.*
 import java.time.LocalDate
@@ -27,8 +26,6 @@ fun getMinkovIndex(map: Map<LocalDate, Double>, startBlockSize: Int = 1): HerstI
     while (blockSize <= xLength / 2) {
         logger.debug("Block size = $blockSize")
         val bitmap = buildBitmap(points, blockSize, xLength, yLength) // Строим сетку определённой длинны
-        logger.debug("Bitmap")
-        logger.debug("${bitmap.getToString()} \n")
         minkPoints.add(Point(ln(1.0 / blockSize), ln(bitmap.countOfBoxes().toDouble())))
         blockSize *= 2  // Увеличиваем клетку вдвоеk
     }

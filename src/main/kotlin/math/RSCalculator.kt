@@ -4,6 +4,7 @@ import data.HerstIndex
 import typesalias.Point
 import utils.MyLogger
 import java.time.LocalDate
+import java.time.LocalDateTime
 import kotlin.math.ln
 import kotlin.math.pow
 
@@ -19,7 +20,7 @@ private val logger: MyLogger = MyLogger.getInstance("RSCalculator")
  */
 fun getRSIndex(map: Map<LocalDate, Double>): HerstIndex {
     val logarithmicValues = convertToLogarithmicSeries(map) // Получение логарифмических значений
-    var divisor = findSmallestDivisor(logarithmicValues.size, 0) // Находим первый делитель
+    var divisor = findSmallestDivisor(logarithmicValues.size) // Находим первый делитель
 
     logger.debug("Size of coming data array is ${map.size}")
     logger.debug("Size of logarithmic values is ${logarithmicValues.size}")
@@ -62,7 +63,7 @@ private fun convertToLogarithmicSeries(mapValues: Map<LocalDate, Double>): List<
 /**
  * Поиск наименьшего делителя
  */
-private fun findSmallestDivisor(value: Int, previousDivisor: Int): Int {
+private fun findSmallestDivisor(value: Int, previousDivisor: Int = 0): Int {
     val firstDiv = if (previousDivisor == 0) 10 else previousDivisor + 1
 
     for (div in firstDiv until (value / 2) + 1) {
